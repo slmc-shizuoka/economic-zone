@@ -1,582 +1,1266 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シフト管理アプリ V9.2 (連勤・週休制限対応)</title>
-    
-    <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
-    <!-- Babel (for JSX) -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- SheetJS (xlsx) for Excel Export -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>最強経済圏</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Orbitron:wght@400;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #05050d;
+  --bg-secondary: #0c0c1a;
+  --bg-card: rgba(15,15,35,0.85);
+  --bg-card-hover: rgba(25,25,55,0.9);
+  --text-primary: #f0f0ff;
+  --text-secondary: #9999cc;
+  --text-muted: #5555aa;
+  --border-color: rgba(100,80,255,0.15);
+  --glow-purple: rgba(140,80,255,0.5);
+  --glow-cyan: rgba(0,220,255,0.5);
+  --glow-gold: rgba(255,200,0,0.5);
 
-    <!-- Google Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+–docomo-primary: #ff1744;
+–docomo-light: #ff5577;
+–docomo-glow: rgba(255,23,68,0.4);
+–docomo-bg: rgba(255,23,68,0.1);
 
-    <style>
-        body { font-family: 'Noto Sans JP', sans-serif; background-color: #f8fafc; }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { height: 8px; width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* Tab Animations */
-        .tab-active { border-bottom: 3px solid #4f46e5; color: #4f46e5; background-color: #eef2ff; }
-        .tab-inactive { border-bottom: 3px solid transparent; color: #6b7280; }
-        .tab-inactive:hover { color: #374151; background-color: #f9fafb; }
+–au-primary: #ff6d00;
+–au-light: #ffaa33;
+–au-glow: rgba(255,109,0,0.4);
+–au-bg: rgba(255,109,0,0.1);
 
-        /* Sticky Table Headers */
-        .sticky-col { position: sticky; left: 0; z-index: 20; background-color: white; }
-        .sticky-header { position: sticky; top: 0; z-index: 30; }
-        .sticky-corner { position: sticky; left: 0; top: 0; z-index: 40; }
+–paypay-primary: #ff0044;
+–paypay-light: #ff4477;
+–paypay-glow: rgba(255,0,68,0.4);
+–paypay-bg: rgba(255,0,68,0.1);
 
-        /* Animation Classes */
-        .fade-in { animation: fadeIn 0.2s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+–rakuten-primary: #e00000;
+–rakuten-light: #ff3333;
+–rakuten-glow: rgba(224,0,0,0.4);
+–rakuten-bg: rgba(224,0,0,0.1);
+
+–vpoint-primary: #00e676;
+–vpoint-light: #66ffaa;
+–vpoint-glow: rgba(0,230,118,0.4);
+–vpoint-bg: rgba(0,230,118,0.1);
+}
+
+- { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+font-family: ‘Noto Sans JP’, ‘Rajdhani’, sans-serif;
+background: var(–bg-primary);
+color: var(–text-primary);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* ============ ANIMATED BACKGROUND ============ */
+.bg-effects {
+position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+}
+.bg-effects::before {
+content:’’;
+position:absolute;
+width:200vw; height:200vh;
+top:-50vh; left:-50vw;
+background:
+radial-gradient(ellipse 40% 30% at 15% 15%, rgba(140,80,255,0.12) 0%, transparent 60%),
+radial-gradient(ellipse 35% 25% at 85% 20%, rgba(0,220,255,0.1) 0%, transparent 60%),
+radial-gradient(ellipse 45% 35% at 50% 80%, rgba(255,60,100,0.08) 0%, transparent 60%),
+radial-gradient(ellipse 30% 30% at 70% 60%, rgba(255,200,0,0.06) 0%, transparent 60%);
+animation: bgDrift 20s ease-in-out infinite alternate;
+}
+@keyframes bgDrift {
+0% { transform: translate(0,0) rotate(0deg); }
+100% { transform: translate(-3%,2%) rotate(2deg); }
+}
+
+/* Grid lines overlay */
+.bg-grid {
+position:fixed; inset:0; z-index:0; pointer-events:none;
+background-image:
+linear-gradient(rgba(100,80,255,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(100,80,255,0.03) 1px, transparent 1px);
+background-size: 60px 60px;
+}
+
+/* Floating particles */
+.particle {
+position:fixed;
+border-radius:50%;
+pointer-events:none;
+z-index:0;
+animation: floatParticle linear infinite;
+}
+@keyframes floatParticle {
+0% { transform: translateY(100vh) scale(0); opacity:0; }
+10% { opacity:1; }
+90% { opacity:1; }
+100% { transform: translateY(-20vh) scale(1); opacity:0; }
+}
+
+.app-container {
+position:relative; z-index:1;
+max-width:1320px;
+margin:0 auto;
+padding:20px 16px 80px;
+}
+
+/* ============ HEADER ============ */
+.app-header {
+text-align:center;
+padding:48px 0 40px;
+position:relative;
+}
+.app-header::before {
+content:’’;
+position:absolute;
+top:20px; left:50%; transform:translateX(-50%);
+width:500px; height:120px;
+background: radial-gradient(ellipse, rgba(140,80,255,0.2), transparent 70%);
+filter:blur(40px);
+pointer-events:none;
+}
+
+.title-badge {
+display:inline-block;
+background: linear-gradient(135deg, rgba(140,80,255,0.15), rgba(0,220,255,0.1));
+border:1px solid rgba(140,80,255,0.3);
+border-radius:50px;
+padding:6px 20px;
+font-size:0.72rem;
+font-weight:600;
+color:var(–text-secondary);
+letter-spacing:0.15em;
+text-transform:uppercase;
+margin-bottom:16px;
+backdrop-filter:blur(10px);
+}
+
+.app-header h1 {
+font-family:‘Orbitron’,sans-serif;
+font-weight:900;
+font-size:clamp(2.4rem,6vw,4.2rem);
+letter-spacing:0.04em;
+line-height:1.1;
+position:relative;
+display:inline-block;
+}
+.app-header h1 .title-main {
+background: linear-gradient(135deg, #ff6b9d, #c084fc, #60a5fa, #34d399, #fbbf24);
+background-size:300% 300%;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+background-clip:text;
+animation: gradientShift 4s ease infinite;
+}
+@keyframes gradientShift {
+0%,100% { background-position:0% 50%; }
+50% { background-position:100% 50%; }
+}
+.app-header h1 .title-glow {
+position:absolute;
+inset:0;
+background: linear-gradient(135deg, #ff6b9d, #c084fc, #60a5fa, #34d399, #fbbf24);
+background-size:300% 300%;
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+background-clip:text;
+animation: gradientShift 4s ease infinite;
+filter:blur(30px);
+opacity:0.5;
+pointer-events:none;
+}
+.app-header .subtitle {
+color:var(–text-secondary);
+font-size:0.95rem;
+font-weight:300;
+max-width:620px;
+margin:16px auto 0;
+line-height:1.8;
+}
+.subtitle .highlight {
+color:#c084fc;
+font-weight:500;
+}
+
+/* ============ MONTHLY INPUT ============ */
+.monthly-section {
+background: var(–bg-card);
+border:1px solid var(–border-color);
+border-radius:20px;
+padding:28px 32px;
+margin-bottom:32px;
+display:flex;
+flex-wrap:wrap;
+gap:16px 32px;
+align-items:center;
+backdrop-filter:blur(20px);
+position:relative;
+overflow:hidden;
+}
+.monthly-section::before {
+content:’’;
+position:absolute;
+top:-1px; left:0; right:0; height:2px;
+background: linear-gradient(90deg, transparent, rgba(140,80,255,0.5), rgba(0,220,255,0.5), transparent);
+}
+.monthly-section .section-label {
+font-family:‘Orbitron’,sans-serif;
+font-weight:700;
+font-size:0.7rem;
+color:var(–text-secondary);
+letter-spacing:0.12em;
+text-transform:uppercase;
+width:100%;
+margin-bottom:4px;
+display:flex;
+align-items:center;
+gap:10px;
+}
+.section-label .icon { font-size:1.2rem; }
+.input-group {
+display:flex;
+flex-direction:column;
+gap:5px;
+}
+.input-group label {
+font-size:0.72rem;
+color:var(–text-muted);
+font-weight:600;
+letter-spacing:0.03em;
+}
+.input-group input {
+background:rgba(20,20,50,0.8);
+border:1px solid rgba(100,80,255,0.2);
+border-radius:12px;
+padding:12px 16px;
+color:#c084fc;
+font-size:1.05rem;
+font-family:‘Rajdhani’,‘Noto Sans JP’,sans-serif;
+font-weight:600;
+width:180px;
+transition:all 0.3s;
+}
+.input-group input:focus {
+outline:none;
+border-color:rgba(140,80,255,0.6);
+box-shadow:0 0 20px rgba(140,80,255,0.15), inset 0 0 20px rgba(140,80,255,0.05);
+}
+.input-group .unit {
+font-size:0.72rem;
+color:var(–text-muted);
+}
+
+/* ============ TAB NAVIGATION ============ */
+.tab-nav {
+display:flex;
+gap:8px;
+margin-bottom:28px;
+overflow-x:auto;
+padding-bottom:4px;
+-webkit-overflow-scrolling:touch;
+}
+.tab-btn {
+flex-shrink:0;
+padding:14px 24px;
+border-radius:14px;
+border:1px solid var(–border-color);
+background:var(–bg-card);
+color:var(–text-secondary);
+font-family:‘Noto Sans JP’,sans-serif;
+font-size:0.88rem;
+font-weight:700;
+cursor:pointer;
+transition:all 0.3s;
+display:flex;
+align-items:center;
+gap:10px;
+white-space:nowrap;
+backdrop-filter:blur(10px);
+position:relative;
+overflow:hidden;
+}
+.tab-btn::before {
+content:’’;
+position:absolute;
+inset:0;
+opacity:0;
+transition:opacity 0.3s;
+border-radius:14px;
+}
+.tab-btn:hover { transform:translateY(-2px); }
+
+.tab-btn.active { transform:translateY(-2px); }
+.tab-btn.active::before { opacity:1; }
+
+.tab-btn.active[data-eco=“docomo”] { border-color:var(–docomo-primary); color:var(–docomo-light); box-shadow:0 4px 25px var(–docomo-glow), inset 0 0 30px rgba(255,23,68,0.05); }
+.tab-btn.active[data-eco=“docomo”]::before { background:var(–docomo-bg); }
+.tab-btn.active[data-eco=“au”] { border-color:var(–au-primary); color:var(–au-light); box-shadow:0 4px 25px var(–au-glow), inset 0 0 30px rgba(255,109,0,0.05); }
+.tab-btn.active[data-eco=“au”]::before { background:var(–au-bg); }
+.tab-btn.active[data-eco=“paypay”] { border-color:var(–paypay-primary); color:var(–paypay-light); box-shadow:0 4px 25px var(–paypay-glow), inset 0 0 30px rgba(255,0,68,0.05); }
+.tab-btn.active[data-eco=“paypay”]::before { background:var(–paypay-bg); }
+.tab-btn.active[data-eco=“rakuten”] { border-color:var(–rakuten-primary); color:var(–rakuten-light); box-shadow:0 4px 25px var(–rakuten-glow), inset 0 0 30px rgba(224,0,0,0.05); }
+.tab-btn.active[data-eco=“rakuten”]::before { background:var(–rakuten-bg); }
+.tab-btn.active[data-eco=“vpoint”] { border-color:var(–vpoint-primary); color:var(–vpoint-light); box-shadow:0 4px 25px var(–vpoint-glow), inset 0 0 30px rgba(0,230,118,0.05); }
+.tab-btn.active[data-eco=“vpoint”]::before { background:var(–vpoint-bg); }
+
+.tab-btn .eco-dot {
+width:12px; height:12px; border-radius:50%;
+position:relative;
+}
+.tab-btn .eco-dot::after {
+content:’’;
+position:absolute; inset:-3px;
+border-radius:50%;
+opacity:0;
+transition:opacity 0.3s;
+}
+.tab-btn.active .eco-dot::after { opacity:1; animation: dotPulse 2s ease-in-out infinite; }
+@keyframes dotPulse {
+0%,100% { transform:scale(1); opacity:0.5; }
+50% { transform:scale(1.8); opacity:0; }
+}
+.tab-btn[data-eco=“docomo”] .eco-dot { background:var(–docomo-primary); box-shadow:0 0 8px var(–docomo-glow); }
+.tab-btn[data-eco=“docomo”] .eco-dot::after { background:var(–docomo-primary); }
+.tab-btn[data-eco=“au”] .eco-dot { background:var(–au-primary); box-shadow:0 0 8px var(–au-glow); }
+.tab-btn[data-eco=“au”] .eco-dot::after { background:var(–au-primary); }
+.tab-btn[data-eco=“paypay”] .eco-dot { background:var(–paypay-primary); box-shadow:0 0 8px var(–paypay-glow); }
+.tab-btn[data-eco=“paypay”] .eco-dot::after { background:var(–paypay-primary); }
+.tab-btn[data-eco=“rakuten”] .eco-dot { background:var(–rakuten-primary); box-shadow:0 0 8px var(–rakuten-glow); }
+.tab-btn[data-eco=“rakuten”] .eco-dot::after { background:var(–rakuten-primary); }
+.tab-btn[data-eco=“vpoint”] .eco-dot { background:var(–vpoint-primary); box-shadow:0 0 8px var(–vpoint-glow); }
+.tab-btn[data-eco=“vpoint”] .eco-dot::after { background:var(–vpoint-primary); }
+
+/* ============ ECO PANEL ============ */
+.eco-panel { display:none; }
+.eco-panel.active { display:block; animation: panelIn 0.45s cubic-bezier(0.22,1,0.36,1); }
+@keyframes panelIn {
+from { opacity:0; transform:translateY(20px) scale(0.98); }
+to { opacity:1; transform:translateY(0) scale(1); }
+}
+
+.eco-layout {
+display:grid;
+grid-template-columns: 1fr 1fr;
+gap:24px;
+}
+@media(max-width:880px) { .eco-layout { grid-template-columns:1fr; } }
+
+/* ============ SERVICE CARD ============ */
+.service-card {
+background:var(–bg-card);
+border:1px solid var(–border-color);
+border-radius:20px;
+padding:28px;
+backdrop-filter:blur(20px);
+position:relative;
+overflow:hidden;
+}
+.service-card::before {
+content:’’;
+position:absolute;
+top:-1px; left:0; right:0; height:2px;
+}
+[data-eco=“docomo”] .service-card::before { background:linear-gradient(90deg, transparent, var(–docomo-primary), transparent); }
+[data-eco=“au”] .service-card::before { background:linear-gradient(90deg, transparent, var(–au-primary), transparent); }
+[data-eco=“paypay”] .service-card::before { background:linear-gradient(90deg, transparent, var(–paypay-primary), transparent); }
+[data-eco=“rakuten”] .service-card::before { background:linear-gradient(90deg, transparent, var(–rakuten-primary), transparent); }
+[data-eco=“vpoint”] .service-card::before { background:linear-gradient(90deg, transparent, var(–vpoint-primary), transparent); }
+
+.service-card h3 {
+font-family:‘Orbitron’,‘Noto Sans JP’,sans-serif;
+font-size:0.68rem;
+color:var(–text-muted);
+font-weight:700;
+letter-spacing:0.1em;
+text-transform:uppercase;
+margin-bottom:20px;
+}
+
+.check-item {
+display:flex;
+align-items:center;
+gap:14px;
+padding:12px 14px;
+border-radius:12px;
+cursor:pointer;
+transition:all 0.2s;
+margin-bottom:4px;
+user-select:none;
+border:1px solid transparent;
+}
+.check-item:hover { background:rgba(100,80,255,0.05); border-color:rgba(100,80,255,0.1); }
+
+.check-item input[type=“checkbox”] { display:none; }
+.check-box {
+width:22px; height:22px;
+border-radius:7px;
+border:2px solid rgba(100,80,255,0.25);
+flex-shrink:0;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:all 0.3s;
+position:relative;
+}
+.check-item input:checked + .check-box {
+border-color: currentColor;
+background: currentColor;
+box-shadow: 0 0 15px currentColor;
+animation: checkPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes checkPop {
+0% { transform:scale(0.7); }
+100% { transform:scale(1); }
+}
+.check-item input:checked + .check-box::after {
+content:‘✓’;
+color:var(–bg-primary);
+font-weight:900;
+font-size:13px;
+}
+.check-item .svc-name {
+font-size:0.9rem;
+font-weight:600;
+}
+.check-item .svc-desc {
+font-size:0.7rem;
+color:var(–text-muted);
+margin-top:2px;
+}
+
+[data-eco=“docomo”] .check-item { color:var(–docomo-light); }
+[data-eco=“au”] .check-item { color:var(–au-light); }
+[data-eco=“paypay”] .check-item { color:var(–paypay-light); }
+[data-eco=“rakuten”] .check-item { color:var(–rakuten-light); }
+[data-eco=“vpoint”] .check-item { color:var(–vpoint-light); }
+
+/* ============ RESULT CARD ============ */
+.result-card {
+background:var(–bg-card);
+border:1px solid var(–border-color);
+border-radius:20px;
+padding:28px;
+position:sticky;
+top:20px;
+backdrop-filter:blur(20px);
+}
+.result-card h3 {
+font-family:‘Orbitron’,‘Noto Sans JP’,sans-serif;
+font-size:0.68rem;
+color:var(–text-muted);
+font-weight:700;
+letter-spacing:0.1em;
+text-transform:uppercase;
+margin-bottom:24px;
+}
+
+.rate-display {
+text-align:center;
+padding:32px 0;
+margin-bottom:24px;
+border-radius:16px;
+position:relative;
+overflow:hidden;
+border:1px solid rgba(100,80,255,0.1);
+}
+.rate-display::before {
+content:’’;
+position:absolute; inset:0;
+opacity:0.08;
+border-radius:16px;
+}
+[data-eco=“docomo”] .rate-display::before { background: radial-gradient(ellipse at center, var(–docomo-primary), transparent 70%); }
+[data-eco=“au”] .rate-display::before { background: radial-gradient(ellipse at center, var(–au-primary), transparent 70%); }
+[data-eco=“paypay”] .rate-display::before { background: radial-gradient(ellipse at center, var(–paypay-primary), transparent 70%); }
+[data-eco=“rakuten”] .rate-display::before { background: radial-gradient(ellipse at center, var(–rakuten-primary), transparent 70%); }
+[data-eco=“vpoint”] .rate-display::before { background: radial-gradient(ellipse at center, var(–vpoint-primary), transparent 70%); }
+
+.rate-label {
+font-size:0.72rem;
+color:var(–text-secondary);
+margin-bottom:10px;
+letter-spacing:0.05em;
+}
+.rate-value {
+font-family:‘Orbitron’,sans-serif;
+font-size:3.8rem;
+font-weight:900;
+letter-spacing:0.02em;
+transition:all 0.4s;
+position:relative;
+}
+.rate-value .pct {
+font-size:1.6rem;
+font-weight:700;
+opacity:0.8;
+}
+[data-eco=“docomo”] .rate-value { color:var(–docomo-light); text-shadow:0 0 40px var(–docomo-glow); }
+[data-eco=“au”] .rate-value { color:var(–au-light); text-shadow:0 0 40px var(–au-glow); }
+[data-eco=“paypay”] .rate-value { color:var(–paypay-light); text-shadow:0 0 40px var(–paypay-glow); }
+[data-eco=“rakuten”] .rate-value { color:var(–rakuten-light); text-shadow:0 0 40px var(–rakuten-glow); }
+[data-eco=“vpoint”] .rate-value { color:var(–vpoint-light); text-shadow:0 0 40px var(–vpoint-glow); }
+
+.rate-breakdown {
+font-size:0.75rem;
+color:var(–text-muted);
+margin-top:10px;
+}
+
+/* Benefits */
+.benefits-list {
+display:flex;
+flex-direction:column;
+gap:8px;
+margin-bottom:24px;
+}
+.benefit-item {
+display:flex;
+align-items:flex-start;
+gap:12px;
+padding:12px 14px;
+background:rgba(15,15,40,0.6);
+border:1px solid rgba(100,80,255,0.08);
+border-radius:12px;
+font-size:0.82rem;
+line-height:1.6;
+animation: benefitSlide 0.35s cubic-bezier(0.22,1,0.36,1);
+transition:border-color 0.2s;
+}
+.benefit-item:hover { border-color:rgba(100,80,255,0.2); }
+@keyframes benefitSlide {
+from { opacity:0; transform:translateX(-12px); }
+to { opacity:1; transform:translateX(0); }
+}
+.benefit-item .b-icon { flex-shrink:0; font-size:1.05rem; margin-top:2px; }
+.benefit-item .b-text { color:var(–text-secondary); }
+.benefit-item .b-text strong { color:var(–text-primary); font-weight:700; }
+
+/* Annual simulation box */
+.annual-box {
+background: linear-gradient(135deg, rgba(140,80,255,0.08), rgba(0,220,255,0.05));
+border-radius:16px;
+padding:22px;
+text-align:center;
+border:1px solid rgba(140,80,255,0.15);
+position:relative;
+overflow:hidden;
+}
+.annual-box::before {
+content:’’;
+position:absolute;
+top:-1px; left:20%; right:20%; height:1px;
+background:linear-gradient(90deg, transparent, rgba(140,80,255,0.4), transparent);
+}
+.annual-box .annual-label {
+font-family:‘Orbitron’,sans-serif;
+font-size:0.6rem;
+color:var(–text-muted);
+margin-bottom:10px;
+text-transform:uppercase;
+letter-spacing:0.12em;
+font-weight:700;
+}
+.annual-box .annual-value {
+font-family:‘Orbitron’,sans-serif;
+font-size:2rem;
+font-weight:900;
+letter-spacing:0.02em;
+}
+.annual-box .annual-sub {
+font-size:0.72rem;
+color:var(–text-muted);
+margin-top:6px;
+}
+
+/* ============ COMPARISON SECTION ============ */
+.comparison-section {
+margin-top:40px;
+background:var(–bg-card);
+border:1px solid var(–border-color);
+border-radius:20px;
+padding:32px;
+backdrop-filter:blur(20px);
+position:relative;
+overflow:hidden;
+}
+.comparison-section::before {
+content:’’;
+position:absolute;
+top:-1px; left:0; right:0; height:2px;
+background: linear-gradient(90deg, var(–docomo-primary), var(–au-primary), var(–paypay-primary), var(–rakuten-primary), var(–vpoint-primary));
+}
+.comparison-section h2 {
+font-family:‘Orbitron’,‘Noto Sans JP’,sans-serif;
+font-size:0.72rem;
+color:var(–text-muted);
+font-weight:700;
+letter-spacing:0.12em;
+text-transform:uppercase;
+margin-bottom:28px;
+display:flex;
+align-items:center;
+gap:10px;
+}
+.comparison-section h2 .icon { font-size:1.2rem; }
+
+.comparison-bars { display:flex; flex-direction:column; gap:16px; }
+.comp-row {
+display:flex;
+align-items:center;
+gap:16px;
+}
+.comp-label {
+width:90px;
+font-size:0.82rem;
+font-weight:700;
+flex-shrink:0;
+text-align:right;
+}
+.comp-bar-bg {
+flex:1;
+height:38px;
+background:rgba(15,15,40,0.6);
+border-radius:10px;
+overflow:hidden;
+position:relative;
+border:1px solid rgba(100,80,255,0.08);
+}
+.comp-bar-fill {
+height:100%;
+border-radius:10px;
+transition:width 0.7s cubic-bezier(0.22,1,0.36,1);
+display:flex;
+align-items:center;
+padding-left:14px;
+font-family:‘Orbitron’,sans-serif;
+font-size:0.78rem;
+font-weight:800;
+color:var(–bg-primary);
+min-width:fit-content;
+position:relative;
+overflow:hidden;
+}
+.comp-bar-fill::after {
+content:’’;
+position:absolute;
+top:0; right:0; bottom:0; width:40px;
+background:linear-gradient(90deg, transparent, rgba(255,255,255,0.15));
+}
+.comp-row[data-eco=“docomo”] .comp-bar-fill { background:linear-gradient(90deg, var(–docomo-primary), var(–docomo-light)); box-shadow:0 0 20px var(–docomo-glow); }
+.comp-row[data-eco=“au”] .comp-bar-fill { background:linear-gradient(90deg, var(–au-primary), var(–au-light)); box-shadow:0 0 20px var(–au-glow); }
+.comp-row[data-eco=“paypay”] .comp-bar-fill { background:linear-gradient(90deg, var(–paypay-primary), var(–paypay-light)); box-shadow:0 0 20px var(–paypay-glow); }
+.comp-row[data-eco=“rakuten”] .comp-bar-fill { background:linear-gradient(90deg, var(–rakuten-primary), var(–rakuten-light)); box-shadow:0 0 20px var(–rakuten-glow); }
+.comp-row[data-eco=“vpoint”] .comp-bar-fill { background:linear-gradient(90deg, var(–vpoint-primary), var(–vpoint-light)); box-shadow:0 0 20px var(–vpoint-glow); }
+
+.comp-row.is-best .comp-label::after {
+content:‘👑’;
+margin-left:6px;
+}
+
+.comp-annual {
+width:120px;
+font-family:‘Orbitron’,sans-serif;
+font-size:0.8rem;
+font-weight:700;
+flex-shrink:0;
+text-align:right;
+color:var(–text-secondary);
+}
+
+/* ============ RECOMMENDATION ============ */
+.recommendation {
+margin-top:32px;
+background:var(–bg-card);
+border:1px solid var(–border-color);
+border-radius:20px;
+padding:32px;
+backdrop-filter:blur(20px);
+position:relative;
+overflow:hidden;
+}
+.recommendation::before {
+content:’’;
+position:absolute;
+top:0; left:0; right:0; bottom:0;
+background: radial-gradient(ellipse at 20% 50%, rgba(255,200,0,0.03), transparent 60%);
+pointer-events:none;
+}
+.recommendation h2 {
+font-family:‘Orbitron’,‘Noto Sans JP’,sans-serif;
+font-size:0.72rem;
+color:var(–text-muted);
+font-weight:700;
+letter-spacing:0.12em;
+text-transform:uppercase;
+margin-bottom:20px;
+display:flex;
+align-items:center;
+gap:10px;
+}
+.rec-content { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+.rec-badge {
+font-family:‘Orbitron’,sans-serif;
+font-size:1.3rem;
+font-weight:900;
+padding:18px 32px;
+border-radius:16px;
+letter-spacing:0.03em;
+position:relative;
+overflow:hidden;
+}
+.rec-badge::after {
+content:’’;
+position:absolute;
+top:0; left:-100%; width:60%; height:100%;
+background:linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+animation: shimmer 3s ease-in-out infinite;
+}
+@keyframes shimmer {
+0% { left:-100%; }
+100% { left:200%; }
+}
+.rec-badge[data-eco=“docomo”] { background:var(–docomo-bg); color:var(–docomo-light); border:1px solid rgba(255,23,68,0.3); box-shadow:0 4px 30px var(–docomo-glow); }
+.rec-badge[data-eco=“au”] { background:var(–au-bg); color:var(–au-light); border:1px solid rgba(255,109,0,0.3); box-shadow:0 4px 30px var(–au-glow); }
+.rec-badge[data-eco=“paypay”] { background:var(–paypay-bg); color:var(–paypay-light); border:1px solid rgba(255,0,68,0.3); box-shadow:0 4px 30px var(–paypay-glow); }
+.rec-badge[data-eco=“rakuten”] { background:var(–rakuten-bg); color:var(–rakuten-light); border:1px solid rgba(224,0,0,0.3); box-shadow:0 4px 30px var(–rakuten-glow); }
+.rec-badge[data-eco=“vpoint”] { background:var(–vpoint-bg); color:var(–vpoint-light); border:1px solid rgba(0,230,118,0.3); box-shadow:0 4px 30px var(–vpoint-glow); }
+.rec-reason {
+font-size:0.88rem;
+color:var(–text-secondary);
+line-height:1.8;
+flex:1;
+min-width:200px;
+}
+.rec-reason strong { color:var(–text-primary); }
+
+/* ============ RESET BUTTON ============ */
+.reset-btn {
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:12px 24px;
+border-radius:12px;
+border:1px solid rgba(100,80,255,0.2);
+background:rgba(140,80,255,0.08);
+color:var(–text-secondary);
+font-family:‘Noto Sans JP’,sans-serif;
+font-size:0.82rem;
+font-weight:600;
+cursor:pointer;
+transition:all 0.3s;
+margin-top:24px;
+}
+.reset-btn:hover {
+background:rgba(140,80,255,0.15);
+border-color:rgba(140,80,255,0.4);
+color:var(–text-primary);
+box-shadow:0 0 20px rgba(140,80,255,0.15);
+transform:translateY(-1px);
+}
+
+/* ============ NO SELECTION ============ */
+.no-selection {
+text-align:center;
+padding:24px;
+color:var(–text-muted);
+font-size:0.85rem;
+border:1px dashed rgba(100,80,255,0.15);
+border-radius:12px;
+}
+
+/* ============ SCROLLBAR ============ */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(140,80,255,0.2); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:rgba(140,80,255,0.4); }
+
+/* ============ MOBILE ============ */
+@media(max-width:600px) {
+.app-container { padding:10px 10px 50px; }
+.monthly-section { padding:20px 16px; }
+.input-group input { width:140px; }
+.service-card, .result-card { padding:20px; }
+.rate-value { font-size:2.8rem; }
+.comp-label { width:64px; font-size:0.72rem; }
+.comp-annual { width:80px; font-size:0.68rem; }
+.tab-btn { padding:10px 16px; font-size:0.8rem; }
+.app-header h1 { font-size:2rem; }
+}
+</style>
+
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo, useCallback } = React;
+<div class="bg-effects"></div>
+<div class="bg-grid"></div>
 
-        // --- 定数・初期データ ---
-        // V9系と互換性あり
-        const APP_STORAGE_KEY = 'shift_app_v9_simple';
+<div class="app-container">
 
-        const COLOR_OPTIONS = [
-            { name: "青", class: "bg-blue-50 text-blue-700 border-blue-200" },
-            { name: "橙", class: "bg-orange-50 text-orange-700 border-orange-200" },
-            { name: "緑", class: "bg-green-50 text-green-700 border-green-200" },
-            { name: "紫", class: "bg-purple-50 text-purple-700 border-purple-200" },
-            { name: "赤", class: "bg-red-50 text-red-700 border-red-200" },
-            { name: "桃", class: "bg-pink-50 text-pink-700 border-pink-200" },
-            { name: "水", class: "bg-cyan-50 text-cyan-700 border-cyan-200" },
-            { name: "灰", class: "bg-gray-100 text-gray-700 border-gray-300" },
-            { name: "黄", class: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-        ];
+  <header class="app-header">
+    <div class="title-badge">⚡ Point Ecosystem Simulator</div>
+    <h1>
+      <span class="title-glow">最強経済圏</span>
+      <span class="title-main">最強経済圏</span>
+    </h1>
+    <p class="subtitle">保有サービスをチェックするだけで、<span class="highlight">還元率とメリット</span>が瞬時に可視化。<br>あなたにとっての最強経済圏を見つけよう。</p>
+  </header>
 
-        const DEFAULT_PRESETS = [
-            { id: 1, label: "出勤", value: "9:45-18:45", color: COLOR_OPTIONS[0].class, type: 'work' },
-            { id: 2, label: "公休", value: "公休",        color: COLOR_OPTIONS[4].class, type: 'holiday' },
-            { id: 3, label: "有給", value: "有給",        color: COLOR_OPTIONS[5].class, type: 'holiday' }
-        ];
+  <!-- Monthly spend -->
 
-        const DEFAULT_STAFF_LIST = [
-            { id: 1, name: "佐藤", isKeyHolder: true, maxWorkDays: 22 },
-            { id: 2, name: "鈴木", isKeyHolder: true, maxWorkDays: 22 },
-            { id: 3, name: "田中", isKeyHolder: false, maxWorkDays: 20 },
-            { id: 4, name: "高橋", isKeyHolder: false, maxWorkDays: 20 },
-            { id: 5, name: "伊藤", isKeyHolder: true, maxWorkDays: 22 } 
-        ];
+  <div class="monthly-section">
+    <div class="section-label"><span class="icon">📊</span> 月間利用額 — 年間ポイント試算</div>
+    <div class="input-group">
+      <label>クレカ決済額/月</label>
+      <input type="number" id="monthlyCard" value="100000" min="0" step="10000">
+      <span class="unit">円</span>
+    </div>
+    <div class="input-group">
+      <label>QR決済額/月</label>
+      <input type="number" id="monthlyQR" value="30000" min="0" step="5000">
+      <span class="unit">円</span>
+    </div>
+    <div class="input-group">
+      <label>ネットショッピング/月</label>
+      <input type="number" id="monthlyNet" value="30000" min="0" step="5000">
+      <span class="unit">円</span>
+    </div>
+  </div>
 
-        // --- 共通コンポーネント: トースト通知 ---
-        const Toast = ({ message, type, onClose }) => {
-            useEffect(() => {
-                const timer = setTimeout(onClose, 3000);
-                return () => clearTimeout(timer);
-            }, [onClose]);
+  <!-- Tabs -->
 
-            const bgColor = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-red-600' : 'bg-gray-800';
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-eco="docomo" onclick="switchTab('docomo')"><span class="eco-dot"></span>ドコモ</button>
+    <button class="tab-btn" data-eco="au" onclick="switchTab('au')"><span class="eco-dot"></span>au</button>
+    <button class="tab-btn" data-eco="paypay" onclick="switchTab('paypay')"><span class="eco-dot"></span>PayPay</button>
+    <button class="tab-btn" data-eco="rakuten" onclick="switchTab('rakuten')"><span class="eco-dot"></span>楽天</button>
+    <button class="tab-btn" data-eco="vpoint" onclick="switchTab('vpoint')"><span class="eco-dot"></span>Vポイント</button>
+  </nav>
 
-            return (
-                <div className={`fixed bottom-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-[100] flex items-center gap-3 fade-in`}>
-                    <i className={`fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}`}></i>
-                    <span className="font-bold">{message}</span>
-                </div>
-            );
-        };
+  <!-- ========== DOCOMO ========== -->
 
-        // --- 共通コンポーネント: 確認モーダル ---
-        const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, confirmText = "実行", confirmColor = "bg-indigo-600" }) => {
-            if (!isOpen) return null;
-            return (
-                <div className="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 fade-in transform scale-100">
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
-                        <p className="text-gray-600 mb-6 whitespace-pre-wrap">{message}</p>
-                        <div className="flex justify-end gap-3">
-                            <button onClick={onCancel} className="px-4 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-lg transition">キャンセル</button>
-                            <button onClick={onConfirm} className={`px-4 py-2 text-white font-bold rounded-lg shadow hover:opacity-90 transition ${confirmColor}`}>
-                                {confirmText}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
+  <div class="eco-panel active" id="panel-docomo" data-eco="docomo">
+    <div class="eco-layout">
+      <div class="service-card">
+        <h3>🔴 ドコモ経済圏 — サービス選択</h3>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="dcard_platinum" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">dカード PLATINUM</div><div class="svc-desc">年会費29,700円・基本1%・ドコモ料金最大20%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="dcard" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">dカード GOLD</div><div class="svc-desc">年会費11,000円・基本1%・ドコモ料金10%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="dcard_goldu" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">dカード GOLD U（29歳以下）</div><div class="svc-desc">年会費3,300円（条件で実質無料）・ドコモ料金5%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="dcardnormal" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">dカード（通常）</div><div class="svc-desc">年会費無料・基本還元率1%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="docomo_max" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">ドコモ MAX / ドコモ ポイ活 MAX</div><div class="svc-desc">データ無制限・各種割引で5,148円〜</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="docomo_poikatsu20" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">ドコモ ポイ活 20</div><div class="svc-desc">20GB・d払い等でポイント還元率UP</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="ahamo" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">ahamo</div><div class="svc-desc">月額2,970円・30GB・海外ローミング無料</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="docomo_mini" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">ドコモ mini</div><div class="svc-desc">小容量プラン（4GB/10GB）・ドコモ光セット割対象</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="docomo_hikari" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">ドコモ光 / home 5G</div><div class="svc-desc">dカードGOLD以上で料金10〜20%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="dbarai" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">d払い</div><div class="svc-desc">dカード連携で還元率UP・ポイ活プランで最大5%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="dmarket" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">dショッピング/dマーケット</div><div class="svc-desc">dポイント還元の各種サービス</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="docomo" data-svc="masimo" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">マネックス証券（dカード積立）</div><div class="svc-desc">GOLD以上で最大1.1%ポイント還元</div></div></label>
+      </div>
+      <div class="result-card" data-eco="docomo">
+        <h3>📈 シミュレーション結果</h3>
+        <div class="rate-display"><div class="rate-label">総合還元率（加重平均）</div><div class="rate-value" id="rate-docomo">1.0<span class="pct">%</span></div><div class="rate-breakdown" id="breakdown-docomo">基本還元率 1.0%</div></div>
+        <div class="benefits-list" id="benefits-docomo"><div class="no-selection">サービスを選択すると特典が表示されます</div></div>
+        <div class="annual-box"><div class="annual-label">年間獲得ポイント</div><div class="annual-value" id="annual-docomo" style="color:var(--docomo-light)">0 pt</div><div class="annual-sub" id="annual-sub-docomo"></div></div>
+      </div>
+    </div>
+  </div>
 
-        const App = () => {
-            const loadState = (key, defaultValue) => {
-                try {
-                    const stored = localStorage.getItem(key);
-                    return stored ? JSON.parse(stored) : defaultValue;
-                } catch (e) {
-                    console.error("Storage load error", e);
-                    return defaultValue;
-                }
-            };
+  <!-- ========== AU ========== -->
 
-            const [activeTab, setActiveTab] = useState('shift'); 
-            const [staffList, setStaffList] = useState(() => loadState(APP_STORAGE_KEY + '_staff', DEFAULT_STAFF_LIST));
-            const [presets, setPresets] = useState(() => loadState(APP_STORAGE_KEY + '_presets', DEFAULT_PRESETS));
-            const [shifts, setShifts] = useState(() => loadState(APP_STORAGE_KEY + '_shifts', {}));
-            const [startDate, setStartDate] = useState(() => loadState(APP_STORAGE_KEY + '_startDate', new Date().toISOString().split('T')[0]));
-            const [daysCount, setDaysCount] = useState(() => loadState(APP_STORAGE_KEY + '_daysCount', 30));
-            
-            const [newStaffName, setNewStaffName] = useState("");
-            const [newStaffIsKeyHolder, setNewStaffIsKeyHolder] = useState(false);
-            const [newStaffMaxWork, setNewStaffMaxWork] = useState(22);
-            const [selectedPresetValue, setSelectedPresetValue] = useState("");
-            
-            const [toast, setToast] = useState(null); 
-            const [modalConfig, setModalConfig] = useState({ isOpen: false, title: "", message: "", onConfirm: null, confirmColor: "" });
+  <div class="eco-panel" id="panel-au" data-eco="au">
+    <div class="eco-layout">
+      <div class="service-card">
+        <h3>🟠 au経済圏 — サービス選択</h3>
+        <label class="check-item"><input type="checkbox" data-eco="au" data-svc="aupay_gold" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">au PAY ゴールドカード</div><div class="svc-desc">年会費11,000円・基本還元率1%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="au" data-svc="aupay_card" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">au PAY カード（通常）</div><div class="svc-desc">年会費無料・基本還元率1%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="au" data-svc="manekatsu2" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">auバリューリンク マネ活2</div><div class="svc-desc">データ無制限・金融連携で最大4,500円還元/月</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="au" data-svc="au_mobile" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">au/UQ mobile回線（通常プラン）</div><div class="svc-desc">ゴールドカードで最大20%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="au" data-svc="au_hikari" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">auひかり</div><div class="svc-desc">ゴールドカードで最大10%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="au" data-svc="jibun_bank" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">auじぶん銀行</div><div class="svc-desc">マネ活2で最大月1,500円キャッシュバック</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="au" data-svc="au_pay" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">au PAY（QR決済）</div><div class="svc-desc">マネ活2+ゴールドで最大5%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="au" data-svc="au_kabu" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">三菱UFJ eスマート証券</div><div class="svc-desc">マネ活2+ゴールド+NISAで積立最大3%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="au" data-svc="au_denki" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">auでんき</div><div class="svc-desc">最大5%Pontaポイント還元</div></div></label>
+      </div>
+      <div class="result-card" data-eco="au">
+        <h3>📈 シミュレーション結果</h3>
+        <div class="rate-display"><div class="rate-label">総合還元率（加重平均）</div><div class="rate-value" id="rate-au">1.0<span class="pct">%</span></div><div class="rate-breakdown" id="breakdown-au">基本還元率 1.0%</div></div>
+        <div class="benefits-list" id="benefits-au"><div class="no-selection">サービスを選択すると特典が表示されます</div></div>
+        <div class="annual-box"><div class="annual-label">年間獲得ポイント</div><div class="annual-value" id="annual-au" style="color:var(--au-light)">0 pt</div><div class="annual-sub" id="annual-sub-au"></div></div>
+      </div>
+    </div>
+  </div>
 
-            useEffect(() => { localStorage.setItem(APP_STORAGE_KEY + '_staff', JSON.stringify(staffList)); }, [staffList]);
-            useEffect(() => { localStorage.setItem(APP_STORAGE_KEY + '_presets', JSON.stringify(presets)); }, [presets]);
-            useEffect(() => { localStorage.setItem(APP_STORAGE_KEY + '_shifts', JSON.stringify(shifts)); }, [shifts]);
-            useEffect(() => { localStorage.setItem(APP_STORAGE_KEY + '_startDate', JSON.stringify(startDate)); }, [startDate]);
-            useEffect(() => { localStorage.setItem(APP_STORAGE_KEY + '_daysCount', JSON.stringify(daysCount)); }, [daysCount]);
+  <!-- ========== PAYPAY ========== -->
 
-            const showToast = (message, type = 'success') => setToast({ message, type });
-            const openConfirm = (title, message, action, color = "bg-indigo-600", btnText = "実行") => {
-                setModalConfig({
-                    isOpen: true, title, message, onConfirm: () => { action(); setModalConfig(prev => ({ ...prev, isOpen: false })); },
-                    onCancel: () => setModalConfig(prev => ({ ...prev, isOpen: false })), confirmColor: color, confirmText: btnText
-                });
-            };
+  <div class="eco-panel" id="panel-paypay" data-eco="paypay">
+    <div class="eco-layout">
+      <div class="service-card">
+        <h3>🔴 PayPay経済圏 — サービス選択</h3>
+        <label class="check-item"><input type="checkbox" data-eco="paypay" data-svc="pp_card" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">PayPayカード</div><div class="svc-desc">年会費無料・基本還元率1%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="paypay" data-svc="pp_gold" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">PayPayカード ゴールド</div><div class="svc-desc">年会費11,000円・基本還元率1.5%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="paypay" data-svc="ymobile" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">ワイモバイル</div><div class="svc-desc">PayPay決済で最大+2%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="paypay" data-svc="softbank" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">ソフトバンク回線</div><div class="svc-desc">PayPay決済で最大+2%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="paypay" data-svc="pp_app" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">PayPay（QR決済）</div><div class="svc-desc">カード連携で最大1.5%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="paypay" data-svc="yahoo_shop" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">Yahoo!ショッピング</div><div class="svc-desc">PayPayポイント最大+5%還元</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="paypay" data-svc="pp_bank" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">PayPay銀行</div><div class="svc-desc">PayPay連携でチャージ便利</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="paypay" data-svc="pp_sec" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">PayPay証券</div><div class="svc-desc">クレカ積立で最大0.7%還元</div></div></label>
+      </div>
+      <div class="result-card" data-eco="paypay">
+        <h3>📈 シミュレーション結果</h3>
+        <div class="rate-display"><div class="rate-label">総合還元率（加重平均）</div><div class="rate-value" id="rate-paypay">0.5<span class="pct">%</span></div><div class="rate-breakdown" id="breakdown-paypay">基本還元率 0.5%</div></div>
+        <div class="benefits-list" id="benefits-paypay"><div class="no-selection">サービスを選択すると特典が表示されます</div></div>
+        <div class="annual-box"><div class="annual-label">年間獲得ポイント</div><div class="annual-value" id="annual-paypay" style="color:var(--paypay-light)">0 pt</div><div class="annual-sub" id="annual-sub-paypay"></div></div>
+      </div>
+    </div>
+  </div>
 
-            const dateList = useMemo(() => {
-                const dates = [];
-                const start = new Date(startDate);
-                for (let i = 0; i < daysCount; i++) {
-                    const d = new Date(start);
-                    d.setDate(start.getDate() + i);
-                    dates.push(d.toISOString().split('T')[0]);
-                }
-                return dates;
-            }, [startDate, daysCount]);
+  <!-- ========== RAKUTEN ========== -->
 
-            // Helper: 月曜起算の週の開始日を取得
-            const getMondayOfWeek = (dateStr) => {
-                const d = new Date(dateStr);
-                const day = d.getDay(); // 0:Sun, 1:Mon...
-                // 月曜ならその日、それ以外なら直前の月曜に戻す
-                const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-                const monday = new Date(d.setDate(diff));
-                return monday.toISOString().split('T')[0];
-            };
+  <div class="eco-panel" id="panel-rakuten" data-eco="rakuten">
+    <div class="eco-layout">
+      <div class="service-card">
+        <h3>🔴 楽天経済圏 — サービス選択</h3>
+        <label class="check-item"><input type="checkbox" data-eco="rakuten" data-svc="r_card" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">楽天カード</div><div class="svc-desc">年会費無料・基本還元率1%・SPU+2倍</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="rakuten" data-svc="r_premium" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">楽天プレミアムカード</div><div class="svc-desc">年会費11,000円・楽天市場+2倍・空港ラウンジ</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="rakuten" data-svc="r_mobile" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">楽天モバイル（最強プラン）</div><div class="svc-desc">SPU+4倍（上限2,000pt/月）※要エントリー</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="rakuten" data-svc="r_bank" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">楽天銀行</div><div class="svc-desc">楽天カード引落で SPU+0.5倍</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="rakuten" data-svc="r_sec" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">楽天証券（ポイント投資）</div><div class="svc-desc">投資信託ポイント投資で SPU+最大1倍</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="rakuten" data-svc="r_pay" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">楽天ペイ</div><div class="svc-desc">楽天カードチャージ払いで1.5%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="rakuten" data-svc="r_ichiba" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">楽天市場（利用）</div><div class="svc-desc">SPU適用で高還元率（最大18倍）</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="rakuten" data-svc="r_hikari" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">楽天ひかり / Rakuten Turbo</div><div class="svc-desc">SPU+2倍（上限1,000pt/月）※要エントリー</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="rakuten" data-svc="r_denki" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">楽天でんき</div><div class="svc-desc">月5,500円以上利用でSPU+0.5倍</div></div></label>
+      </div>
+      <div class="result-card" data-eco="rakuten">
+        <h3>📈 シミュレーション結果</h3>
+        <div class="rate-display"><div class="rate-label">楽天市場でのSPU倍率</div><div class="rate-value" id="rate-rakuten">1.0<span class="pct">倍</span></div><div class="rate-breakdown" id="breakdown-rakuten">基本還元率 1倍</div></div>
+        <div class="benefits-list" id="benefits-rakuten"><div class="no-selection">サービスを選択すると特典が表示されます</div></div>
+        <div class="annual-box"><div class="annual-label">年間獲得ポイント</div><div class="annual-value" id="annual-rakuten" style="color:var(--rakuten-light)">0 pt</div><div class="annual-sub" id="annual-sub-rakuten"></div></div>
+      </div>
+    </div>
+  </div>
 
-            const isWorkValue = (value) => {
-                if (!value) return false;
-                const preset = presets.find(p => p.value === value);
-                if (preset && preset.type === 'holiday') return false;
-                if (value.includes('公休') || value.includes('休') || value.includes('有給')) return false;
-                return true;
-            };
+  <!-- ========== VPOINT ========== -->
 
-            const getCurrentWorkCount = (staffId, currentShifts) => {
-                let count = 0;
-                dateList.forEach(date => {
-                    if (isWorkValue(currentShifts[`${staffId}_${date}`])) count++;
-                });
-                return count;
-            };
+  <div class="eco-panel" id="panel-vpoint" data-eco="vpoint">
+    <div class="eco-layout">
+      <div class="service-card">
+        <h3>🟢 Vポイント経済圏 — サービス選択</h3>
+        <label class="check-item"><input type="checkbox" data-eco="vpoint" data-svc="olive" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">Oliveフレキシブルペイ（一般）</div><div class="svc-desc">年会費無料・基本還元率0.5%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="vpoint" data-svc="olive_gold" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">Olive ゴールド / 三井住友NL ゴールド</div><div class="svc-desc">年100万利用で年会費実質無料・基本0.5%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="vpoint" data-svc="olive_platpref" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">Olive プラチナプリファード</div><div class="svc-desc">年会費33,000円・基本1%・特約店最大+14%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="vpoint" data-svc="smbc_bank" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">三井住友銀行（Olive口座）</div><div class="svc-desc">Vポイントアッププログラム +最大1%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="vpoint" data-svc="sbi_sec" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">SBI証券（クレカ積立）</div><div class="svc-desc">最大3%還元・Vポイントアッププログラム+最大2%</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="vpoint" data-svc="vp_conveni" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">対象コンビニ・飲食店利用</div><div class="svc-desc">スマホタッチ決済で最大8%（Olive）・最大20%も可</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="vpoint" data-svc="vp_family" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">家族ポイント登録</div><div class="svc-desc">家族1人につき+1%（最大+5%）コンビニ・飲食店</div></div></label>
+        <label class="check-item"><input type="checkbox" data-eco="vpoint" data-svc="vp_tsumitate" onchange="recalc()"><span class="check-box"></span><div><div class="svc-name">Vポイント投資</div><div class="svc-desc">ポイントで投資信託購入可能</div></div></label>
+      </div>
+      <div class="result-card" data-eco="vpoint">
+        <h3>📈 シミュレーション結果</h3>
+        <div class="rate-display"><div class="rate-label">総合還元率（加重平均）</div><div class="rate-value" id="rate-vpoint">0.5<span class="pct">%</span></div><div class="rate-breakdown" id="breakdown-vpoint">基本還元率 0.5%</div></div>
+        <div class="benefits-list" id="benefits-vpoint"><div class="no-selection">サービスを選択すると特典が表示されます</div></div>
+        <div class="annual-box"><div class="annual-label">年間獲得ポイント</div><div class="annual-value" id="annual-vpoint" style="color:var(--vpoint-light)">0 pt</div><div class="annual-sub" id="annual-sub-vpoint"></div></div>
+      </div>
+    </div>
+  </div>
 
-            const countKeyHoldersOnDate = (date) => {
-                let count = 0;
-                staffList.forEach(staff => {
-                    if (!staff.isKeyHolder) return;
-                    if (isWorkValue(shifts[`${staff.id}_${date}`])) count++;
-                });
-                return count;
-            };
+  <!-- Comparison -->
 
-            const getCellStyle = (value) => {
-                if (!value) return "bg-white hover:bg-gray-50";
-                const matchedPreset = presets.find(p => p.value === value);
-                if (matchedPreset) return matchedPreset.color + " font-bold shadow-sm";
-                if (value.includes("公休") || value.includes("休") && !value.includes("有給")) return "bg-red-50 text-red-700 font-bold border-red-100";
-                if (value.includes("有給")) return "bg-pink-50 text-pink-700 font-bold border-pink-100";
-                return "bg-gray-100 text-gray-800 border-gray-200";
-            };
+  <div class="comparison-section">
+    <h2><span class="icon">⚡</span> 経済圏バトル — 横断比較</h2>
+    <div class="comparison-bars" id="comparison-bars"></div>
+  </div>
 
-            const calculateStats = (staffId) => {
-                let workCount = 0; let holidayCount = 0; let paidCount = 0;
-                dateList.forEach(date => {
-                    const val = shifts[`${staffId}_${date}`];
-                    if (!val) return;
-                    const matchedPreset = presets.find(p => p.value === val);
-                    if (val.includes("有給") || (matchedPreset && matchedPreset.label.includes("有給"))) paidCount++;
-                    else if (val.includes("公休") || val.includes("休") || (matchedPreset && matchedPreset.type === 'holiday')) holidayCount++;
-                    else workCount++;
-                });
-                return { workCount, holidayCount, paidCount };
-            };
+  <!-- Recommendation -->
 
-            // --- 自動生成ロジック (V9.2) ---
-            const generateAutoShifts = () => {
-                openConfirm(
-                    "シフト自動生成 (V9.2)",
-                    "現在の空欄を自動的に埋めます。\n\n【適用されるルール】\n・スタッフ毎の出勤上限日数\n・鍵持ちスタッフ確保(2名)\n・最大5連勤まで (6連勤禁止)\n・週休2日確保 (月曜起算で週5日勤務まで)\n\n実行しますか？",
-                    () => {
-                        const newShifts = { ...shifts };
-                        const workPresets = presets.filter(p => p.type === 'work');
-                        const holidayPresets = presets.filter(p => p.type === 'holiday');
-                        
-                        if (workPresets.length === 0 || holidayPresets.length === 0) {
-                            showToast("エラー: 「出勤」と「休日」のプリセットが必要です。", "error");
-                            return;
-                        }
+  <div class="recommendation">
+    <h2><span class="icon">🏆</span> あなたの最強経済圏は？</h2>
+    <div class="rec-content" id="rec-content">
+      <div class="no-selection">各経済圏でサービスを選択すると、最適な経済圏を提案します</div>
+    </div>
+  </div>
 
-                        // 制約チェック関数
-                        const canAssignWork = (staffId, targetDate, currentShiftsMap) => {
-                            // 1. 連勤チェック (直近5日間が全て出勤ならNG -> 6連勤禁止)
-                            let consecutive = 0;
-                            const d = new Date(targetDate);
-                            for (let i = 1; i <= 5; i++) {
-                                const prev = new Date(d);
-                                prev.setDate(d.getDate() - i);
-                                const prevDateStr = prev.toISOString().split('T')[0];
-                                if (isWorkValue(currentShiftsMap[`${staffId}_${prevDateStr}`])) {
-                                    consecutive++;
-                                } else {
-                                    break;
-                                }
-                            }
-                            if (consecutive >= 5) return false;
+<button class="reset-btn" onclick="resetAll()">🔄 すべてリセット</button>
 
-                            // 2. 週出勤数チェック (月曜起算で週5日以上ならNG)
-                            const mondayStr = getMondayOfWeek(targetDate);
-                            let weeklyWorkCount = 0;
-                            const monday = new Date(mondayStr);
-                            for(let i = 0; i < 7; i++) {
-                                const checkD = new Date(monday);
-                                checkD.setDate(monday.getDate() + i);
-                                const checkDateStr = checkD.toISOString().split('T')[0];
-                                
-                                if (checkDateStr === targetDate) continue; // 自分自身は除外
+</div>
 
-                                if (isWorkValue(currentShiftsMap[`${staffId}_${checkDateStr}`])) {
-                                    weeklyWorkCount++;
-                                }
-                            }
-                            if (weeklyWorkCount >= 5) return false;
+<script>
+// ============ PARTICLES ============
+(function initParticles(){
+  const colors = ['rgba(140,80,255,0.3)','rgba(0,220,255,0.3)','rgba(255,60,100,0.2)','rgba(255,200,0,0.2)','rgba(0,230,118,0.2)'];
+  for(let i=0;i<18;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    const size = Math.random()*4+2;
+    p.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}%;background:${colors[i%colors.length]};box-shadow:0 0 ${size*3}px ${colors[i%colors.length]};animation-duration:${Math.random()*12+8}s;animation-delay:${Math.random()*10}s;`;
+    document.body.appendChild(p);
+  }
+})();
 
-                            return true;
-                        };
+// ============ ECOSYSTEM DATA ============
+const ecosystems = {
+  docomo: {
+    name: 'ドコモ',
+    calc(checked, monthly) {
+      let rate = 0, benefits = [], breakdown = [];
+      let hasPlatinum = checked.has('dcard_platinum'), hasGold = checked.has('dcard'), hasGoldU = checked.has('dcard_goldu'), hasNormal = checked.has('dcardnormal');
+      let hasCard = hasPlatinum || hasGold || hasGoldU || hasNormal;
+      let hasPoikatsu = checked.has('docomo_max') || checked.has('docomo_poikatsu20');
+      if (hasPlatinum) { rate=1.0; breakdown.push('dカードPLATINUM 1.0%'); benefits.push({icon:'💳',text:'<strong>dカード PLATINUM</strong>：基本1%、ドコモ料金 初年度20%還元（2年目以降10〜20%）、年間利用特典あり'}); }
+      else if (hasGold) { rate=1.0; breakdown.push('dカードGOLD 1.0%'); benefits.push({icon:'💳',text:'<strong>dカード GOLD</strong>：基本1%、ドコモ料金10%還元、年間利用特典あり'}); }
+      else if (hasGoldU) { rate=1.0; breakdown.push('dカードGOLD U 1.0%'); benefits.push({icon:'💳',text:'<strong>dカード GOLD U</strong>：基本1%、ドコモ料金5%還元、条件達成で年会費実質無料'}); }
+      else if (hasNormal) { rate=1.0; breakdown.push('dカード 1.0%'); benefits.push({icon:'💳',text:'<strong>dカード</strong>：基本還元率1%、年会費無料'}); }
+      let mobileRate = hasPlatinum ? 20 : hasGold ? 10 : hasGoldU ? 5 : 0;
+      if (checked.has('docomo_max')) {
+        benefits.push({icon:'📱',text:`<strong>ドコモ MAX / ポイ活 MAX</strong>：データ無制限${mobileRate>0?'・dカードで料金'+mobileRate+'%還元':''}`});
+        if(hasPoikatsu && hasCard) benefits.push({icon:'✨',text:'<strong>ポイ活プラン特典</strong>：d払い等の決済ポイント還元率UP（dカード種別で最大+5%）'});
+      }
+      if (checked.has('docomo_poikatsu20')) {
+        benefits.push({icon:'📱',text:`<strong>ドコモ ポイ活 20</strong>：20GB${mobileRate>0?'・dカードで料金'+mobileRate+'%還元':''}`});
+        if(hasCard) benefits.push({icon:'✨',text:'<strong>ポイ活20特典</strong>：d払い等の決済ポイント還元率UP'});
+      }
+      if (checked.has('ahamo')) { benefits.push({icon:'📱',text:'<strong>ahamo</strong>：月額2,970円/30GB、海外ローミング無料' + (hasGoldU ? '・GOLD Uで+5GBボーナス' : '')}); }
+      if (checked.has('docomo_mini')) { benefits.push({icon:'📱',text:`<strong>ドコモ mini</strong>：小容量低価格プラン（4GB/10GB）${mobileRate>0?'・dカードで料金'+mobileRate+'%還元':''}`}); }
+      if (checked.has('docomo_hikari')) {
+        if(mobileRate>0) benefits.push({icon:'🌐',text:`<strong>ドコモ光 / home 5G</strong>：料金${mobileRate}%還元（月約500〜1,000pt）`});
+        else benefits.push({icon:'🌐',text:'ドコモ光 / home 5G利用中（dカードGOLD以上で料金還元対象）'});
+      }
+      if (checked.has('dbarai')) {
+        let dRate = hasPoikatsu && hasPlatinum ? 5.0 : hasPoikatsu && (hasGold||hasGoldU) ? 3.0 : hasCard ? 1.5 : 0.5;
+        if(hasCard){rate+=0.5;breakdown.push('d払い+dカード +0.5%');}
+        benefits.push({icon:'📲',text:`<strong>d払い</strong>：還元率${dRate}%${hasPoikatsu?' (ポイ活プラン適用)':' (dカード連携)'}`});
+      }
+      if (checked.has('dmarket')) { benefits.push({icon:'🛒',text:'<strong>dショッピング</strong>：dポイント最大20倍キャンペーンあり'}); if(hasCard)rate+=0.5; }
+      if (checked.has('masimo')) { let mr=hasPlatinum?1.1:hasGold?1.1:hasGoldU?1.1:0.5; benefits.push({icon:'📈',text:`<strong>マネックス証券</strong>：dカード積立で最大${mr}%ポイント還元`}); }
+      if(!hasCard) rate = checked.size>0?0.5:0;
+      let annualPts = Math.round(monthly.card*(rate/100)*12);
+      if(checked.has('dbarai')) { let dR=hasPoikatsu&&hasPlatinum?0.05:hasPoikatsu&&hasCard?0.03:hasCard?0.015:0.005; annualPts+=Math.round(monthly.qr*dR*12); }
+      let hasMobile=checked.has('docomo_max')||checked.has('docomo_poikatsu20')||checked.has('ahamo')||checked.has('docomo_mini');
+      if(mobileRate>0&&hasMobile) annualPts+=Math.round(8000*mobileRate/100)*12;
+      if(mobileRate>0&&checked.has('docomo_hikari')) annualPts+=Math.round(5000*mobileRate/100)*12;
+      if(checked.has('dmarket')) annualPts+=Math.round(monthly.net*(rate+2)/100*12);
+      return {rate:Math.min(rate,10),benefits,breakdown,annualPts};
+    }
+  },
+  au: {
+    name: 'au',
+    calc(checked, monthly) {
+      let rate=0, benefits=[], breakdown=[];
+      let hasGold=checked.has('aupay_gold'), hasNormal=checked.has('aupay_card'), hasCard=hasGold||hasNormal;
+      let hasManekatsu=checked.has('manekatsu2');
+      if(hasGold){rate=1.0;breakdown.push('au PAY ゴールド 1.0%');benefits.push({icon:'💳',text:'<strong>au PAY ゴールドカード</strong>：基本還元率1%、au料金最大20%還元'});}
+      else if(hasNormal){rate=1.0;breakdown.push('au PAY カード 1.0%');benefits.push({icon:'💳',text:'<strong>au PAY カード</strong>：基本還元率1%、年会費無料'});}
+      if(hasManekatsu){
+        benefits.push({icon:'📱',text:'<strong>auバリューリンク マネ活2</strong>：データ無制限・Pontaパス等5サービス付帯'});
+        if(hasGold){
+          benefits.push({icon:'💰',text:'<strong>マネ活2×ゴールド特典</strong>：au PAYカード決済+1.5%還元（上限2,500pt/月）'});
+          rate+=1.5; breakdown.push('マネ活2カード決済 +1.5%');
+        } else if(hasNormal){
+          benefits.push({icon:'💰',text:'<strong>マネ活2×カード特典</strong>：au PAYカード決済+0.5%還元（上限500pt/月）'});
+          rate+=0.5; breakdown.push('マネ活2カード決済 +0.5%');
+        }
+      }
+      if(checked.has('au_mobile')){if(hasGold)benefits.push({icon:'📱',text:'<strong>au通常プラン料金最大20%還元</strong>（ゴールドカード特典・12ヶ月限定）'});else benefits.push({icon:'📱',text:'au/UQ mobile利用中（ゴールドカードで最大20%還元）'});}
+      if(checked.has('au_hikari')&&hasGold){benefits.push({icon:'🌐',text:'<strong>auひかり料金最大10%還元</strong>（ゴールドカード特典）'});}
+      if(checked.has('jibun_bank')){
+        if(hasManekatsu&&hasGold){benefits.push({icon:'🏦',text:'<strong>auじぶん銀行</strong>：マネ活2特典で毎月最大2,000円キャッシュバック（残高+カード引落連携）'});rate+=0.5;breakdown.push('じぶん銀行連携 +0.5%');}
+        else if(hasManekatsu){benefits.push({icon:'🏦',text:'<strong>auじぶん銀行</strong>：マネ活2特典で毎月最大1,100円キャッシュバック'});if(hasCard){rate+=0.5;breakdown.push('じぶん銀行連携 +0.5%');}}
+        else {benefits.push({icon:'🏦',text:'<strong>auじぶん銀行</strong>：au PAY連携等で普通預金金利優遇'});if(hasCard){rate+=0.5;breakdown.push('じぶん銀行連携 +0.5%');}}
+      }
+      if(checked.has('au_pay')){
+        let payRate = hasManekatsu&&hasGold ? 5.0 : hasManekatsu&&hasNormal ? 2.0 : hasCard ? 1.5 : 0.5;
+        benefits.push({icon:'📲',text:`<strong>au PAY（QR決済）</strong>：還元率最大${payRate}%${hasManekatsu?' (マネ活2特典込)':''}`});
+        if(!hasManekatsu&&hasCard){rate+=0.5;breakdown.push('au PAY チャージ +0.5%');}
+      }
+      if(checked.has('au_kabu')){
+        let secRate = hasManekatsu&&hasGold ? 3.0 : hasGold ? 1.0 : 0.5;
+        benefits.push({icon:'📈',text:`<strong>三菱UFJ eスマート証券</strong>：クレカ積立で最大${secRate}%還元${hasManekatsu?'（マネ活2+NISA特典込）':''}`});
+      }
+      if(checked.has('au_denki'))benefits.push({icon:'⚡',text:'<strong>auでんき</strong>：電気料金の最大5%をPontaポイント還元'});
+      if(!hasCard)rate=checked.size>0?0.5:0;
+      let annualPts=Math.round(monthly.card*(rate/100)*12);
+      let payR = hasManekatsu&&hasGold?0.05:hasManekatsu&&hasNormal?0.02:hasCard?0.015:0.005;
+      if(checked.has('au_pay'))annualPts+=Math.round(monthly.qr*payR*12);
+      let hasMobile=hasManekatsu||checked.has('au_mobile');
+      if(hasGold&&hasMobile)annualPts+=1500*12;
+      if(hasGold&&checked.has('au_hikari'))annualPts+=500*12;
+      if(hasManekatsu&&checked.has('jibun_bank')){annualPts+=hasGold?2000*12:1100*12;}
+      return {rate:Math.min(rate,10),benefits,breakdown,annualPts};
+    }
+  },
+  paypay: {
+    name: 'PayPay',
+    calc(checked, monthly) {
+      let rate=0, benefits=[], breakdown=[];
+      let hasGold=checked.has('pp_gold'), hasNormal=checked.has('pp_card'), hasCard=hasGold||hasNormal;
+      if(hasGold){rate=1.5;breakdown.push('PayPayカード ゴールド 1.5%');benefits.push({icon:'💳',text:'<strong>PayPayカード ゴールド</strong>：基本還元率1.5%、ソフトバンク料金最大10%還元'});}
+      else if(hasNormal){rate=1.0;breakdown.push('PayPayカード 1.0%');benefits.push({icon:'💳',text:'<strong>PayPayカード</strong>：基本還元率1%、年会費無料'});}
+      if(checked.has('ymobile')){rate+=2.0;breakdown.push('ワイモバイル +2.0%');benefits.push({icon:'📱',text:'<strong>ワイモバイル</strong>：PayPay決済時+最大2%還元'});}
+      if(checked.has('softbank')){rate+=2.0;breakdown.push('ソフトバンク +2.0%');benefits.push({icon:'📱',text:'<strong>ソフトバンク回線</strong>：PayPay決済時+最大2%還元'});if(hasGold)benefits.push({icon:'✨',text:'<strong>SB料金10%還元</strong>（PayPayカードゴールド特典）'});}
+      if(checked.has('pp_app')){if(hasCard)benefits.push({icon:'📲',text:'<strong>PayPay×カード連携</strong>：PayPayポイントとして還元'});else benefits.push({icon:'📲',text:'PayPay：基本還元率0.5%（カード連携で大幅UP）'});}
+      if(checked.has('yahoo_shop')){let s=hasCard?5.0:1.0;benefits.push({icon:'🛒',text:`<strong>Yahoo!ショッピング</strong>：最大${s}%還元`});}
+      if(checked.has('pp_bank'))benefits.push({icon:'🏦',text:'<strong>PayPay銀行</strong>：PayPay残高チャージ手数料無料'});
+      if(checked.has('pp_sec'))benefits.push({icon:'📈',text:'<strong>PayPay証券</strong>：クレカ積立で最大0.7%還元'});
+      if(!hasCard)rate=checked.size>0?0.5:0;
+      let annualPts=Math.round(monthly.card*(rate/100)*12);
+      if(checked.has('pp_app'))annualPts+=Math.round(monthly.qr*(hasCard?0.015:0.005)*12);
+      if(checked.has('yahoo_shop'))annualPts+=Math.round(monthly.net*(hasCard?0.05:0.01)*12);
+      if(hasGold&&checked.has('softbank'))annualPts+=1000*12;
+      return {rate:Math.min(rate,12),benefits,breakdown,annualPts};
+    }
+  },
+  rakuten: {
+    name: '楽天',
+    calc(checked, monthly) {
+      let spuRate=1.0, cardRate=0, benefits=[], breakdown=['楽天市場 基本1倍'];
+      let hasCard=checked.has('r_card'), hasPremium=checked.has('r_premium');
+      if(hasPremium){spuRate+=2.0;cardRate=1.0;breakdown.push('プレミアムカード +2倍');benefits.push({icon:'💳',text:'<strong>楽天プレミアムカード</strong>：楽天市場SPU+2倍、空港ラウンジ特典'});}
+      else if(hasCard){spuRate+=2.0;cardRate=1.0;breakdown.push('楽天カード +2倍');benefits.push({icon:'💳',text:'<strong>楽天カード</strong>：基本還元率1%、楽天市場SPU+2倍（通常+特典）'});}
+      if(checked.has('r_mobile')){spuRate+=4.0;breakdown.push('楽天モバイル +4倍');benefits.push({icon:'📱',text:'<strong>楽天モバイル（最強プラン）</strong>：SPU+4倍（上限2,000pt/月）※要エントリー'});}
+      if(checked.has('r_bank')){spuRate+=0.5;breakdown.push('楽天銀行 +0.5倍');benefits.push({icon:'🏦',text:'<strong>楽天銀行</strong>：楽天カード引落でSPU+0.5倍、金利UP'});}
+      if(checked.has('r_sec')){spuRate+=1.0;breakdown.push('楽天証券 +最大1倍');benefits.push({icon:'📈',text:'<strong>楽天証券</strong>：ポイント投資でSPU+最大1倍、クレカ積立0.5〜1%還元'});}
+      if(checked.has('r_pay'))benefits.push({icon:'📲',text:'<strong>楽天ペイ</strong>：楽天カードチャージ払いで実質1.5%'});
+      if(checked.has('r_ichiba'))benefits.push({icon:'🛒',text:`<strong>楽天市場</strong>：現在のSPU合計 <strong>${spuRate.toFixed(1)}倍</strong> で買い物可能（最大18倍）`});
+      if(checked.has('r_hikari')){spuRate+=2.0;breakdown.push('楽天ひかり +2倍');benefits.push({icon:'🌐',text:'<strong>楽天ひかり / Rakuten Turbo</strong>：SPU+2倍（上限1,000pt/月）※要エントリー'});}
+      if(checked.has('r_denki')){spuRate+=0.5;breakdown.push('楽天でんき +0.5倍');benefits.push({icon:'⚡',text:'<strong>楽天でんき</strong>：月5,500円以上利用でSPU+0.5倍'});}
+      let annualPts=0;
+      let eff=hasPremium||hasCard?1.0:0;
+      annualPts+=Math.round(monthly.card*(eff/100)*12);
+      if(checked.has('r_pay'))annualPts+=Math.round(monthly.qr*0.015*12);
+      if(checked.has('r_ichiba'))annualPts+=Math.round(monthly.net*(spuRate/100)*12);
+      return {rate:spuRate,benefits,breakdown,annualPts,isSpuRate:true};
+    }
+  },
+  vpoint: {
+    name: 'Vポイント',
+    calc(checked, monthly) {
+      let rate=0, benefits=[], breakdown=[];
+      let hasPlatPref=checked.has('olive_platpref'), hasGold=checked.has('olive_gold'), hasOlive=checked.has('olive');
+      let hasCard=hasPlatPref||hasGold||hasOlive;
+      if(hasPlatPref){rate=1.0;breakdown.push('プラチナプリファード 1.0%');benefits.push({icon:'💳',text:'<strong>Olive プラチナプリファード</strong>：基本1%、特約店で最大+14%、年間利用特典あり'});}
+      else if(hasGold){rate=0.5;breakdown.push('Olive ゴールド 0.5%');benefits.push({icon:'💳',text:'<strong>Olive ゴールド</strong>：基本0.5%、年100万利用で10,000pt+年会費実質無料'});}
+      else if(hasOlive){rate=0.5;breakdown.push('Olive 一般 0.5%');benefits.push({icon:'💳',text:'<strong>Oliveフレキシブルペイ（一般）</strong>：基本0.5%、年会費永年無料'});}
+      if(checked.has('smbc_bank')){if(hasCard){rate+=1.0;breakdown.push('Olive口座連携 +1.0%');}benefits.push({icon:'🏦',text:'<strong>三井住友銀行（Olive口座）</strong>：Vポイントアッププログラムで対象店舗+最大1%'});}
+      if(checked.has('sbi_sec')){let sr=hasPlatPref?3.0:hasGold?1.0:0.5;benefits.push({icon:'📈',text:`<strong>SBI証券</strong>：クレカ積立で最大${sr}%還元・Vポイントアッププログラム+最大2%`});if(hasCard){rate+=0.5;breakdown.push('SBI証券連携 +0.5%');}}
+      if(checked.has('vp_conveni')){
+        let c=hasPlatPref?8.0:hasCard?8.0:2.0;
+        let extra='';
+        if(checked.has('vp_family'))extra+='＋家族ポイント最大+5%';
+        if(checked.has('smbc_bank')||checked.has('sbi_sec'))extra+='＋Vポイントアッププログラム';
+        benefits.push({icon:'🏪',text:`<strong>対象コンビニ・飲食店</strong>：スマホタッチ決済で最大<strong>${c}%</strong>還元${extra}（合計最大20%）`});
+      }
+      if(checked.has('vp_family'))benefits.push({icon:'👨‍👩‍👧‍👦',text:'<strong>家族ポイント</strong>：家族1人登録ごとに対象店舗+1%（最大+5%）'});
+      if(checked.has('vp_tsumitate'))benefits.push({icon:'💰',text:'<strong>Vポイント投資</strong>：貯まったポイントで投資信託を購入可能'});
+      if(!hasCard)rate=checked.size>0?0.5:0;
+      let annualPts=Math.round(monthly.card*(rate/100)*12);
+      if(checked.has('vp_conveni')){let cr=hasCard?0.08:0.02;if(checked.has('vp_family'))cr+=0.03;annualPts+=Math.round(20000*cr*12);}
+      if(hasGold)annualPts+=10000;
+      if(hasPlatPref)annualPts+=40000;
+      return {rate:Math.min(rate,10),benefits,breakdown,annualPts};
+    }
+  }
+};
 
-                        // ワークカウント初期化
-                        const workCounts = {};
-                        staffList.forEach(s => {
-                            workCounts[s.id] = getCurrentWorkCount(s.id, newShifts);
-                        });
+// ============ UI LOGIC ============
+let activeTab='docomo';
 
-                        const keyHolders = staffList.filter(s => s.isKeyHolder);
+function switchTab(eco){
+  activeTab=eco;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.tab-btn[data-eco="${eco}"]`).classList.add('active');
+  document.querySelectorAll('.eco-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`panel-${eco}`).classList.add('active');
+}
 
-                        // Phase 1: 鍵持ち確保 (日付順)
-                        dateList.forEach(date => {
-                            let currentKeyCount = 0;
-                            keyHolders.forEach(s => {
-                                if (isWorkValue(newShifts[`${s.id}_${date}`])) currentKeyCount++;
-                            });
+function getMonthly(){
+  return {
+    card:parseInt(document.getElementById('monthlyCard').value)||0,
+    qr:parseInt(document.getElementById('monthlyQR').value)||0,
+    net:parseInt(document.getElementById('monthlyNet').value)||0,
+  };
+}
 
-                            const needed = Math.max(0, 2 - currentKeyCount);
-                            if (needed === 0) return;
+function getCheckedServices(eco){
+  const s=new Set();
+  document.querySelectorAll(`input[data-eco="${eco}"]:checked`).forEach(c=>s.add(c.dataset.svc));
+  return s;
+}
 
-                            const candidates = keyHolders.filter(s => !newShifts[`${s.id}_${date}`]);
-                            candidates.sort((a, b) => {
-                                const roomA = a.maxWorkDays - workCounts[a.id];
-                                const roomB = b.maxWorkDays - workCounts[b.id];
-                                return roomB - roomA; 
-                            });
+function fmt(n){return n.toLocaleString('ja-JP');}
 
-                            let assignedCount = 0;
-                            for (const staff of candidates) {
-                                if (assignedCount >= needed) break;
-                                
-                                // 制約チェック (厳格モード)
-                                if (canAssignWork(staff.id, date, newShifts) && workCounts[staff.id] < staff.maxWorkDays) {
-                                    newShifts[`${staff.id}_${date}`] = workPresets[Math.floor(Math.random() * workPresets.length)].value;
-                                    workCounts[staff.id]++;
-                                    assignedCount++;
-                                }
-                            }
-                        });
+function recalc(){
+  const monthly=getMonthly();
+  const results={};
+  for(const[key,eco]of Object.entries(ecosystems)){
+    const checked=getCheckedServices(key);
+    results[key]=eco.calc(checked,monthly);
+    results[key].checked=checked;
+    document.getElementById(`rate-${key}`).innerHTML=`${results[key].rate.toFixed(1)}<span class="pct">${results[key].isSpuRate?'倍':'%'}</span>`;
+    const bd=document.getElementById(`breakdown-${key}`);
+    bd.textContent=results[key].breakdown.length>0?results[key].breakdown.join(' + '):(results[key].isSpuRate?'SPU基本 1倍':'未選択');
+    const bf=document.getElementById(`benefits-${key}`);
+    bf.innerHTML=results[key].benefits.length>0?results[key].benefits.map(b=>`<div class="benefit-item"><span class="b-icon">${b.icon}</span><span class="b-text">${b.text}</span></div>`).join(''):'<div class="no-selection">サービスを選択すると特典が表示されます</div>';
+    document.getElementById(`annual-${key}`).textContent=`${fmt(results[key].annualPts)} pt`;
+    document.getElementById(`annual-sub-${key}`).textContent=`≒ 年間約 ${fmt(results[key].annualPts)} 円相当`;
+  }
+  updateComparison(results);
+  updateRecommendation(results);
+}
 
-                        // Phase 2: 残り埋め (日付順)
-                        dateList.forEach(date => {
-                            staffList.forEach(staff => {
-                                const key = `${staff.id}_${date}`;
-                                if (newShifts[key]) return; // 決定済みはスキップ
+function updateComparison(results){
+  const c=document.getElementById('comparison-bars');
+  const sorted=Object.entries(results).sort((a,b)=>b[1].annualPts-a[1].annualPts);
+  const maxPts=Math.max(...sorted.map(([,r])=>r.annualPts),1);
+  const bestKey=sorted[0][0];
+  c.innerHTML=sorted.map(([key,r])=>{
+    const pct=(r.annualPts/maxPts*100).toFixed(1);
+    return `<div class="comp-row ${key===bestKey&&r.annualPts>0?'is-best':''}" data-eco="${key}"><div class="comp-label">${ecosystems[key].name}</div><div class="comp-bar-bg"><div class="comp-bar-fill" style="width:${Math.max(pct,4)}%">${r.rate.toFixed(1)}${r.isSpuRate?'倍':'%'}</div></div><div class="comp-annual">${fmt(r.annualPts)} pt/年</div></div>`;
+  }).join('');
+}
 
-                                if (workCounts[staff.id] < staff.maxWorkDays && canAssignWork(staff.id, date, newShifts)) {
-                                    // 80%の確率で出勤を試みる（ランダム性を持たせる）
-                                    if (Math.random() < 0.8) {
-                                        newShifts[key] = workPresets[Math.floor(Math.random() * workPresets.length)].value;
-                                        workCounts[staff.id]++;
-                                    } else {
-                                        newShifts[key] = holidayPresets[Math.floor(Math.random() * holidayPresets.length)].value;
-                                    }
-                                } else {
-                                    // 制約NG or 上限到達 -> 休み
-                                    newShifts[key] = holidayPresets[Math.floor(Math.random() * holidayPresets.length)].value;
-                                }
-                            });
-                        });
-                        
-                        setShifts(newShifts);
-                        showToast("自動生成完了 (連勤・週休制限適用)");
-                    },
-                    "bg-gradient-to-r from-indigo-600 to-blue-600"
-                );
-            };
+function updateRecommendation(results){
+  const c=document.getElementById('rec-content');
+  const entries=Object.entries(results);
+  if(!entries.some(([,r])=>r.checked.size>0)){c.innerHTML='<div class="no-selection">各経済圏でサービスを選択すると、最適な経済圏を提案します</div>';return;}
+  const best=entries.reduce((a,b)=>a[1].annualPts>b[1].annualPts?a:b);
+  const[bk,br]=best;
+  const bn=ecosystems[bk].name;
+  const reasons={
+    docomo:`dカードPLATINUM/GOLDとドコモMAX/ポイ活プランの組み合わせで通信費からも大量ポイント獲得。年間 <strong>${fmt(br.annualPts)}pt</strong> の獲得が見込めます。`,
+    au:`マネ活2プランとau PAYゴールドカード・auじぶん銀行の連携で、決済＋キャッシュバックのダブルメリット。年間 <strong>${fmt(br.annualPts)}pt</strong> 相当の獲得が見込めます。`,
+    paypay:`PayPayの高還元率とYahoo!ショッピングの相乗効果が強力。年間 <strong>${fmt(br.annualPts)}pt</strong> の獲得が見込めます。`,
+    rakuten:`楽天市場でのSPU還元率が <strong>${br.rate.toFixed(1)}倍</strong> と高く、ネット通販メインの方に最適。年間 <strong>${fmt(br.annualPts)}pt</strong> の獲得が見込めます。`,
+    vpoint:`コンビニ・飲食店でスマホタッチ決済最大20%還元とSBI証券連携が魅力。年間 <strong>${fmt(br.annualPts)}pt</strong> の獲得が見込めます。`
+  };
+  let reason=reasons[bk];
+  const sorted=entries.sort((a,b)=>b[1].annualPts-a[1].annualPts);
+  if(sorted.length>1&&sorted[1][1].annualPts>0) reason+=`<br><br>次点は <strong>${ecosystems[sorted[1][0]].name}経済圏</strong>（年間 ${fmt(sorted[1][1].annualPts)}pt）です。`;
+  c.innerHTML=`<div class="rec-badge" data-eco="${bk}">🏆 ${bn}経済圏</div><div class="rec-reason">${reason}</div>`;
+}
 
-            const handleShiftChange = (staffId, date, value) => setShifts(prev => ({ ...prev, [`${staffId}_${date}`]: value }));
-            const handleCellClick = (staffId, date) => {};
-            const handlePresetChange = (id, field, newValue) => setPresets(prev => prev.map(p => p.id === id ? { ...p, [field]: newValue } : p));
-            const updateStaffInfo = (id, field, value) => setStaffList(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
+function resetAll(){
+  document.querySelectorAll('input[type="checkbox"]').forEach(c=>c.checked=false);
+  document.getElementById('monthlyCard').value=100000;
+  document.getElementById('monthlyQR').value=30000;
+  document.getElementById('monthlyNet').value=30000;
+  recalc();
+}
 
-            const addPreset = () => {
-                const newId = presets.length > 0 ? Math.max(...presets.map(p => p.id)) + 1 : 1;
-                setPresets([...presets, { id: newId, label: "新規", value: "00:00-00:00", color: COLOR_OPTIONS[7].class, type: 'work' }]);
-                showToast("プリセットを追加しました");
-            };
-            const deletePreset = (id) => openConfirm("削除", "削除しますか？", () => { setPresets(prev => prev.filter(p => p.id !== id)); if(selectedPresetValue) setSelectedPresetValue(""); }, "bg-red-600", "削除");
+['monthlyCard','monthlyQR','monthlyNet'].forEach(id=>{document.getElementById(id).addEventListener('input',recalc);});
 
-            const addStaff = (e) => {
-                e.preventDefault();
-                if (!newStaffName.trim()) return;
-                const newId = staffList.length > 0 ? Math.max(...staffList.map(s => s.id)) + 1 : 1;
-                setStaffList([...staffList, { id: newId, name: newStaffName, isKeyHolder: newStaffIsKeyHolder, maxWorkDays: Number(newStaffMaxWork) }]);
-                setNewStaffName(""); setNewStaffIsKeyHolder(false); setNewStaffMaxWork(22); showToast("追加しました");
-            };
-            const removeStaff = (id, name) => openConfirm("削除", `${name}さんを削除しますか？`, () => { setStaffList(staffList.filter(s => s.id !== id)); }, "bg-red-600", "削除");
-            const clearAllShifts = () => openConfirm("全消去", "全てのシフトを消去しますか？", () => { setShifts({}); showToast("消去しました"); }, "bg-red-600", "全消去");
+// Card mutual exclusion
+document.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+  cb.addEventListener('change',function(){
+    const eco=this.dataset.eco, svc=this.dataset.svc;
+    const ex={docomo:[['dcard_platinum','dcard','dcard_goldu','dcardnormal'],['docomo_max','docomo_poikatsu20','ahamo','docomo_mini']],au:[['aupay_gold','aupay_card'],['manekatsu2','au_mobile']],paypay:[['pp_card','pp_gold']],rakuten:[['r_card','r_premium']],vpoint:[['olive','olive_gold','olive_platpref']]};
+    if(this.checked&&ex[eco])ex[eco].forEach(group=>{if(group.includes(svc)){group.forEach(s=>{if(s!==svc){const oc=document.querySelector(`input[data-svc="${s}"]`);if(oc)oc.checked=false;}});}});
+  });
+});
 
-            const exportToExcel = () => {
-                try {
-                    const workbook = XLSX.utils.book_new();
-                    const masterHeader = ["名前", "鍵", ...dateList, "出勤", "公休", "有給", "上限"];
-                    const masterData = staffList.map(staff => {
-                        const stats = calculateStats(staff.id);
-                        const row = [staff.name, staff.isKeyHolder ? "〇" : ""];
-                        dateList.forEach(date => row.push(shifts[`${staff.id}_${date}`] || ""));
-                        row.push(stats.workCount, stats.holidayCount, stats.paidCount, staff.maxWorkDays);
-                        return row;
-                    });
-                    const masterSheet = XLSX.utils.aoa_to_sheet([masterHeader, ...masterData]);
-                    XLSX.utils.book_append_sheet(workbook, masterSheet, "全体シフト");
-                    XLSX.writeFile(workbook, `シフト表_${startDate}.xlsx`);
-                    showToast("ダウンロード開始");
-                } catch (error) { console.error(error); showToast("エラーが発生しました", "error"); }
-            };
+recalc();
+</script>
 
-            const TabNavigation = () => (
-                <div className="bg-white shadow-sm mb-6 sticky top-0 z-50 border-b border-gray-100">
-                    <div className="max-w-7xl mx-auto px-4">
-                        <div className="flex space-x-1 overflow-x-auto no-scrollbar">
-                            {[{ id: 'shift', icon: 'fa-table', label: 'シフト作成表' }, { id: 'stats', icon: 'fa-chart-pie', label: '集計データ' }, { id: 'staff', icon: 'fa-users', label: 'スタッフ管理' }, { id: 'settings', icon: 'fa-sliders', label: '設定・保存' }].map(tab => (
-                                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-5 py-4 font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 outline-none ${activeTab === tab.id ? 'tab-active' : 'tab-inactive'}`}>
-                                    <i className={`fa-solid ${tab.icon}`}></i> {tab.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            );
-
-            const ShiftTableTab = () => (
-                <div className="w-full px-2 sm:px-4 max-w-[100vw] fade-in">
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-20 z-40">
-                        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1 w-full xl:w-auto">
-                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
-                                    スタンプ入力:<br/><span className="text-[10px] font-normal text-gray-400">選択してセルをクリック</span>
-                                </span>
-                                <div className="flex flex-wrap gap-2">
-                                    {presets.map((preset) => (
-                                        <button key={preset.id} onClick={() => setSelectedPresetValue(selectedPresetValue === preset.value ? "" : preset.value)} className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all shadow-sm flex flex-col items-center justify-center min-w-[60px] relative overflow-hidden ${selectedPresetValue === preset.value ? 'ring-2 ring-offset-2 ring-indigo-500 transform scale-105 z-10 ' + preset.color : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'}`}>
-                                            <span>{preset.label}</span>
-                                            {selectedPresetValue === preset.value && <div className="absolute inset-0 bg-current opacity-10"></div>}
-                                        </button>
-                                    ))}
-                                    {selectedPresetValue && <button onClick={() => setSelectedPresetValue("")} className="ml-2 text-xs text-gray-400 hover:text-red-500 underline whitespace-nowrap"><i className="fa-solid fa-xmark mr-1"></i>解除</button>}
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3 border-t xl:border-t-0 xl:border-l pt-3 xl:pt-0 xl:pl-4 border-gray-100 w-full xl:w-auto justify-end">
-                                <button onClick={generateAutoShifts} className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-md flex items-center whitespace-nowrap transition-transform active:scale-95"><i className="fa-solid fa-robot mr-2"></i> 自動作成</button>
-                                <button onClick={clearAllShifts} className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-lg transition" title="全てクリア"><i className="fa-solid fa-trash-can"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-320px)] relative">
-                        <div className="overflow-auto flex-1 custom-scrollbar">
-                            <table className="border-collapse text-sm w-full">
-                                <thead className="sticky-header bg-gray-50 shadow-sm z-30">
-                                    <tr>
-                                        <th className="sticky-corner bg-gray-100 p-3 text-left font-bold text-gray-600 border-b border-r min-w-[160px] shadow z-50">
-                                            <div className="flex items-center justify-between"><span>スタッフ</span><span className="text-[10px] bg-gray-200 px-2 py-0.5 rounded-full">上限</span></div>
-                                        </th>
-                                        {dateList.map(date => {
-                                            const d = new Date(date);
-                                            const day = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
-                                            const color = d.getDay() === 0 ? 'text-red-600 bg-red-50' : d.getDay() === 6 ? 'text-blue-600 bg-blue-50' : 'text-gray-700 bg-gray-50';
-                                            return <th key={date} className={`p-2 text-center border-b border-r border-gray-200 min-w-[60px] ${color}`}><div className="text-[10px] opacity-70 leading-none mb-1">{d.getMonth()+1}/{d.getDate()}</div><div className="text-sm font-bold leading-none">{day}</div></th>;
-                                        })}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {staffList.map((staff) => (
-                                        <tr key={staff.id} className="hover:bg-gray-50 group">
-                                            <td className="sticky-col left-0 bg-white p-3 border-b border-r border-gray-100 font-medium text-gray-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-gray-50 z-20">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2"><div className={`w-2 h-8 rounded-r ${staff.isKeyHolder ? 'bg-yellow-400' : 'bg-gray-300'}`}></div><div className="flex flex-col"><span className="leading-tight">{staff.name}</span>{staff.isKeyHolder && <span className="text-[9px] text-yellow-600 font-bold">KEY</span>}</div></div>
-                                                    <span className="text-xs text-gray-400 font-mono bg-gray-100 px-1.5 py-0.5 rounded">{staff.maxWorkDays}</span>
-                                                </div>
-                                            </td>
-                                            {dateList.map(date => {
-                                                const key = `${staff.id}_${date}`;
-                                                const val = shifts[key] || "";
-                                                return (
-                                                    <td key={key} className="p-1 border-b border-r border-gray-100 relative h-12 p-0">
-                                                        <input type="text" value={val} onChange={(e) => handleShiftChange(staff.id, date, e.target.value)} onClick={() => { if(selectedPresetValue) handleShiftChange(staff.id, date, selectedPresetValue); }} className={`w-full h-full text-center text-xs outline-none transition-colors focus:ring-2 focus:ring-indigo-500 focus:z-10 relative ${getCellStyle(val)} ${selectedPresetValue ? 'cursor-pointer' : 'cursor-text'}`} />
-                                                    </td>
-                                                );
-                                            })}
-                                        </tr>
-                                    ))}
-                                    <tr className="bg-gray-50 border-t-2 border-gray-200">
-                                        <td className="sticky-col left-0 bg-gray-100 p-2 border-r font-bold text-xs text-gray-500 text-right z-20 shadow">鍵当番 (2人以上)</td>
-                                        {dateList.map(date => {
-                                            const count = countKeyHoldersOnDate(date);
-                                            const isWarning = count < 2;
-                                            return <td key={`check_${date}`} className={`text-center border-r border-gray-200 text-xs font-bold py-2 ${isWarning ? 'bg-red-100 text-red-600' : 'bg-green-50 text-green-600'}`}>{isWarning ? <i className="fa-solid fa-circle-exclamation"></i> : <i className="fa-solid fa-check"></i>} {count}</td>;
-                                        })}
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            );
-
-            const StatsTab = () => (
-                <div className="max-w-5xl mx-auto px-4 fade-in">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                            <h2 className="text-lg font-bold text-gray-800"><i className="fa-solid fa-chart-pie text-indigo-500 mr-2"></i> シフト集計データ</h2>
-                            <span className="text-xs text-gray-500">※自動計算されます</span>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-white text-gray-500 font-bold uppercase text-xs border-b border-gray-200">
-                                    <tr><th className="px-6 py-4">スタッフ名</th><th className="px-6 py-4 text-center">出勤上限</th><th className="px-6 py-4 text-center bg-blue-50">出勤実績</th><th className="px-6 py-4 text-center">公休数</th><th className="px-6 py-4 text-center">有給数</th><th className="px-6 py-4 text-center">状態</th></tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {staffList.map(staff => {
-                                        const stats = calculateStats(staff.id);
-                                        const isOverWork = stats.workCount > staff.maxWorkDays;
-                                        return (
-                                            <tr key={staff.id} className="hover:bg-gray-50 transition">
-                                                <td className="px-6 py-4 font-bold text-gray-700">{staff.name}</td>
-                                                <td className="px-6 py-4 text-center font-bold text-gray-500">{staff.maxWorkDays}日</td>
-                                                <td className={`px-6 py-4 text-center font-bold text-lg bg-blue-50/50 ${isOverWork ? 'text-red-600' : 'text-blue-700'}`}>{stats.workCount}</td>
-                                                <td className="px-6 py-4 text-center font-bold text-red-700 text-lg">{stats.holidayCount}</td>
-                                                <td className="px-6 py-4 text-center font-bold text-pink-700 text-lg">{stats.paidCount}</td>
-                                                <td className="px-6 py-4 text-center text-xs">{isOverWork ? <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full font-bold border border-red-200">超過</span> : <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold border border-green-200">正常</span>}</td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            );
-
-            const StaffTab = () => (
-                <div className="max-w-3xl mx-auto px-4 fade-in">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                        <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center"><i className="fa-solid fa-user-plus text-indigo-500 mr-2"></i> スタッフ登録・編集</h2>
-                        <form onSubmit={addStaff} className="bg-gray-50 p-5 rounded-xl border border-gray-200 mb-8 shadow-inner">
-                            <div className="flex flex-col md:flex-row gap-5 items-end">
-                                <div className="flex-1 w-full"><label className="block text-xs font-bold text-gray-500 mb-1.5 ml-1">名前</label><input type="text" placeholder="例: 山田 太郎" value={newStaffName} onChange={(e) => setNewStaffName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white"/></div>
-                                <div className="w-full md:w-32"><label className="block text-xs font-bold text-gray-500 mb-1.5 ml-1">出勤上限(日)</label><input type="number" min="1" max="31" value={newStaffMaxWork} onChange={(e) => setNewStaffMaxWork(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white"/></div>
-                                <div className="mb-3"><label className="flex items-center cursor-pointer select-none bg-white px-3 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition"><input type="checkbox" checked={newStaffIsKeyHolder} onChange={(e) => setNewStaffIsKeyHolder(e.target.checked)} className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"/><span className="ml-2 text-sm font-bold text-gray-700 flex items-center"><i className="fa-solid fa-key text-yellow-500 mr-1.5"></i> 鍵管理者</span></label></div>
-                                <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold w-full md:w-auto shadow transition transform active:scale-95 whitespace-nowrap"><i className="fa-solid fa-plus mr-1"></i> 追加</button>
-                            </div>
-                        </form>
-                        <div className="space-y-3">
-                            <div className="text-xs font-bold text-gray-400 uppercase ml-2 mb-2">登録済みスタッフ ({staffList.length}名)</div>
-                            {staffList.map(staff => (
-                                <div key={staff.id} className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition gap-3 group">
-                                    <div className="flex items-center gap-4 w-full sm:w-auto"><div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-600 font-bold border border-gray-200">{staff.name.charAt(0)}</div><div className="flex flex-col"><span className="font-bold text-gray-800 text-lg leading-tight">{staff.name}</span>{staff.isKeyHolder && <span className="text-xs text-yellow-600 font-bold flex items-center mt-0.5"><i className="fa-solid fa-key mr-1"></i> 鍵管理者</span>}</div></div>
-                                    <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-100">
-                                        <div className="flex items-center gap-2 text-sm bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100"><span className="text-gray-500 text-xs font-bold">上限:</span><input type="number" className="w-12 border-b border-gray-300 text-center bg-transparent font-bold focus:border-indigo-500 focus:outline-none" value={staff.maxWorkDays} onChange={(e) => updateStaffInfo(staff.id, 'maxWorkDays', Number(e.target.value))}/><span className="text-gray-500 text-xs">日</span></div>
-                                        <button onClick={() => removeStaff(staff.id, staff.name)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition group-hover:text-gray-400"><i className="fa-solid fa-trash-can"></i></button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            );
-
-            const SettingsTab = () => (
-                <div className="max-w-5xl mx-auto px-4 space-y-8 pb-20 fade-in">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                        <div className="flex justify-between items-center mb-6"><div><h2 className="text-lg font-bold text-gray-800 flex items-center"><i className="fa-solid fa-pen-to-square text-indigo-500 mr-2"></i> シフトパターン編集</h2><p className="text-xs text-gray-500 mt-1">ここで設定したパターンが自動生成で使用されます</p></div><button onClick={addPreset} className="bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition flex items-center"><i className="fa-solid fa-plus mr-2"></i> 新規追加</button></div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                            {presets.map((preset) => (
-                                <div key={preset.id} className={`relative p-5 rounded-xl border-2 transition-all ${preset.color.replace('text-', 'border-').split(' ')[2] || 'border-gray-200'} bg-white shadow-sm hover:shadow-md group`}>
-                                    <button onClick={() => deletePreset(preset.id)} className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 transition opacity-0 group-hover:opacity-100" title="削除"><i className="fa-solid fa-trash-can"></i></button>
-                                    <div className="space-y-4">
-                                        <div><label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">表示ラベル</label><input type="text" value={preset.label} onChange={(e) => handlePresetChange(preset.id, 'label', e.target.value)} className="w-full font-bold text-gray-800 text-lg border-b border-gray-200 focus:border-indigo-500 outline-none pb-1 bg-transparent"/></div>
-                                        <div><label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">値 (時間など)</label><input type="text" value={preset.value} onChange={(e) => handlePresetChange(preset.id, 'value', e.target.value)} className="w-full text-sm p-2 bg-gray-50 rounded border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"/></div>
-                                        <div className="flex items-center gap-4"><div className="flex-1"><label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">タイプ</label><div className="flex rounded-md shadow-sm" role="group"><button onClick={() => handlePresetChange(preset.id, 'type', 'work')} className={`flex-1 py-1.5 text-xs font-bold rounded-l border ${preset.type === 'work' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50'}`}>出勤</button><button onClick={() => handlePresetChange(preset.id, 'type', 'holiday')} className={`flex-1 py-1.5 text-xs font-bold rounded-r border-t border-b border-r ${preset.type === 'holiday' ? 'bg-red-500 text-white border-red-500' : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50'}`}>休日</button></div></div></div>
-                                        <div><label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block">カラーテーマ</label><div className="flex flex-wrap gap-2">{COLOR_OPTIONS.map((opt, idx) => (<button key={idx} onClick={() => handlePresetChange(preset.id, 'color', opt.class)} className={`w-6 h-6 rounded-full border border-gray-200 transition-transform hover:scale-110 ${opt.class.split(' ')[0]} ${preset.color === opt.class ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}`}></button>))}</div></div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                        <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center"><i className="fa-solid fa-calendar-days text-gray-400 mr-2"></i> 期間設定</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div><label className="block text-sm font-bold text-gray-700 mb-2">シフト開始日</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition"/></div>
-                            <div><label className="block text-sm font-bold text-gray-700 mb-2">表示日数</label><select value={daysCount} onChange={(e) => setDaysCount(Number(e.target.value))} className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-white transition cursor-pointer"><option value={14}>2週間 (14日)</option><option value={28}>4週間 (28日)</option><option value={30}>30日</option><option value={31}>31日</option></select></div>
-                        </div>
-                    </div>
-                    <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-8 rounded-2xl shadow-lg text-center text-white relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-full bg-white opacity-10 transform -skew-x-12"></div><h2 className="text-2xl font-bold mb-2 relative z-10">シフト表を保存する</h2><p className="mb-6 opacity-90 relative z-10 text-sm">作成したシフト表をExcel形式でダウンロードします</p>
-                        <button onClick={exportToExcel} className="bg-white text-emerald-600 hover:bg-gray-100 px-8 py-3 rounded-full shadow-lg font-bold transition transform hover:-translate-y-1 relative z-10 flex items-center justify-center mx-auto"><i className="fa-solid fa-file-excel mr-2 text-xl"></i> Excelダウンロード</button>
-                    </div>
-                </div>
-            );
-
-            return (
-                <div className="min-h-screen bg-gray-50 pb-12 font-sans text-gray-900">
-                    <TabNavigation /><main className="w-full animate-fade-in">{activeTab === 'shift' && <ShiftTableTab />}{activeTab === 'stats' && <StatsTab />}{activeTab === 'staff' && <StaffTab />}{activeTab === 'settings' && <SettingsTab />}</main>
-                    <ConfirmDialog {...modalConfig} />{toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
 </body>
 </html>
